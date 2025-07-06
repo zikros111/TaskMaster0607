@@ -19,6 +19,8 @@ class TaskRepository @Inject constructor(
 
     fun getSubTasks(parentId: Long): LiveData<List<Task>> = taskDao.getSubTasks(parentId)
 
+    suspend fun getSubTasksList(parentId: Long): List<Task> = taskDao.getSubTasksList(parentId)
+
     fun getTasksBySphere(sphereId: Long): LiveData<List<Task>> = taskDao.getTasksBySphere(sphereId)
 
     suspend fun insertTask(task: Task): Long = taskDao.insertTask(task)
