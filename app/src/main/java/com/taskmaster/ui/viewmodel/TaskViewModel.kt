@@ -215,4 +215,8 @@ class TaskViewModel @Inject constructor(
         )
         taskRepository.insertTask(task)
     }
+
+    suspend fun getSubtasks(parentId: Long): List<Task> {
+        return taskRepository.getSubTasksList(parentId)
+    }
 }

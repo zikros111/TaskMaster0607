@@ -8,10 +8,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.taskmaster.databinding.FragmentTodayBinding
 import com.taskmaster.ui.adapter.TaskAdapter
 import com.taskmaster.ui.dialogs.CreateTaskDialogFragment
+import com.taskmaster.ui.adapter.TaskWithSubtasks
 import com.taskmaster.ui.viewmodel.ProfileViewModel
 import com.taskmaster.ui.viewmodel.TaskViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -67,9 +69,16 @@ class TodayFragment : Fragment() {
 
     private fun setupObservers() {
         taskViewModel.todayTasks.observe(viewLifecycleOwner) { tasks ->
-            taskAdapter.submitList(tasks)
-            binding.emptyState.visibility = if (tasks.isEmpty()) View.VISIBLE else View.GONE
-            updateTasksInfo(tasks)
+            viewLifecycleOwner.lifecycleScope.launch {
+                val parents = tasks.filter { it.parentTaskId == null }
+                val list = parents.map { parent ->
+                    val subs = taskViewModel.getSubtasks(parent.id)
+                    TaskWithSubtasks(parent, subs)
+                }
+                taskAdapter.submitList(list)
+                binding.emptyState.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+                updateTasksInfo(list.map { it.task })
+            }
         }
 
         taskViewModel.todayProgress.observe(viewLifecycleOwner) { progress ->

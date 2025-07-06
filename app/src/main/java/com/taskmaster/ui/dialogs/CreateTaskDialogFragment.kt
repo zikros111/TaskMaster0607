@@ -10,6 +10,8 @@ import android.widget.ArrayAdapter
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.core.widget.addTextChangedListener
+import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.snackbar.Snackbar
 import com.taskmaster.R
 import com.taskmaster.data.entity.Sphere
@@ -37,6 +39,10 @@ class CreateTaskDialogFragment : DialogFragment() {
     private var selectedSphere: Sphere? = null
     private var editingTask: Task? = null
     private var isEditMode: Boolean = false
+
+    private val subtaskFields = mutableListOf<TextInputEditText>()
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,6 +128,9 @@ class CreateTaskDialogFragment : DialogFragment() {
         binding.spinnerTaskType.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
                 binding.layoutSubtasks.visibility = if (position == 1) View.VISIBLE else View.GONE
+                if (position == 1 && subtaskFields.isEmpty()) {
+                    addSubtaskField()
+                }
             }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         })
@@ -144,8 +153,11 @@ class CreateTaskDialogFragment : DialogFragment() {
     }
 
     private fun setupObservers() {
-        sphereViewModel.allSpheres.observe(this) { sphereList ->
+        sphereViewModel.allSpheres.observe(viewLifecycleOwner) { sphereList ->
             spheres = sphereList
+            if (spheres.isEmpty()) {
+                sphereViewModel.insertDefaultSpheres()
+            }
             setupSphereSpinner()
             populateEditingTask()
         }
@@ -258,8 +270,13 @@ class CreateTaskDialogFragment : DialogFragment() {
                     }
                 } else {
                     if (isComplexTask) {
+
+                        val subtasks = subtaskFields.map { it.text.toString().trim() }.filter { it.isNotEmpty() }
+                        createComplexTask(title, description, priority, sphereId, subtasks)
+
                         val subtasksText = binding.editTextSubtasks.text.toString().trim()
                         createComplexTask(title, description, priority, sphereId, subtasksText)
+
                     } else {
                         taskViewModel.createTask(
                             title = title,
@@ -283,7 +300,7 @@ class CreateTaskDialogFragment : DialogFragment() {
         description: String,
         priority: Int,
         sphereId: Long,
-        subtasksText: String
+        subtasks: List<String>
     ) {
         // Создаем главную задачу
         val mainTaskId = taskViewModel.createTaskAndGetId(
@@ -295,8 +312,7 @@ class CreateTaskDialogFragment : DialogFragment() {
         )
 
 // Создаем подзадачи
-        if (subtasksText.isNotEmpty()) {
-            val subtasks = subtasksText.split("\n").filter { it.trim().isNotEmpty() }
+        if (subtasks.isNotEmpty()) {
             subtasks.forEach { subtaskTitle ->
                 taskViewModel.createSubtask(
                     title = subtaskTitle.trim(),
@@ -305,6 +321,19 @@ class CreateTaskDialogFragment : DialogFragment() {
                     sphereId = sphereId,
                     dueDate = selectedDate
                 )
+            }
+        }
+    }
+
+    private fun addSubtaskField(text: String = "") {
+        val field = TextInputEditText(requireContext())
+        field.setText(text)
+        field.hint = "Подзадача"
+        binding.layoutSubtasks.addView(field)
+        subtaskFields.add(field)
+        field.addTextChangedListener {
+            if (field == subtaskFields.last() && it?.isNotEmpty() == true) {
+                addSubtaskField()
             }
         }
     }
