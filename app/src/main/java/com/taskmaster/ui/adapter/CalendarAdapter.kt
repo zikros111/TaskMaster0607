@@ -5,12 +5,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.taskmaster.R
 import com.taskmaster.databinding.ItemCalendarDayBinding
 import java.text.SimpleDateFormat
 import java.util.*
 
 sealed class CalendarDay {
-    data class DateDay(val date: Date) : CalendarDay()
+    data class DateDay(val date: Date, val progress: Float) : CalendarDay()
     object EmptyDay : CalendarDay()
 }
 
@@ -43,6 +44,12 @@ class CalendarAdapter(
                     binding.textDay.text = dateFormat.format(calendarDay.date)
                     binding.root.setOnClickListener { onDateClick(calendarDay.date) }
                     binding.root.alpha = 1.0f
+                    val colorRes = when {
+                        calendarDay.progress >= 1f -> R.color.success
+                        calendarDay.progress > 0f -> R.color.warning
+                        else -> android.R.color.transparent
+                    }
+                    binding.root.setBackgroundColor(binding.root.context.getColor(colorRes))
                 }
                 is CalendarDay.EmptyDay -> {
                     binding.textDay.text = ""
