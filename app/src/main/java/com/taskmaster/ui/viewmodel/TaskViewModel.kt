@@ -107,6 +107,28 @@ class TaskViewModel @Inject constructor(
         }
     }
 
+    fun updateTask(task: Task) {
+        viewModelScope.launch {
+            try {
+                taskRepository.updateTask(task)
+                loadTodayData()
+            } catch (e: Exception) {
+                _errorMessage.value = "Ошибка обновления задачи: ${e.message}"
+            }
+        }
+    }
+
+    fun restoreTask(task: Task) {
+        viewModelScope.launch {
+            try {
+                taskRepository.insertTask(task.copy(id = 0))
+                loadTodayData()
+            } catch (e: Exception) {
+                _errorMessage.value = "Ошибка восстановления задачи: ${e.message}"
+            }
+        }
+    }
+
     fun deleteTask(task: Task) {
         viewModelScope.launch {
             try {
@@ -192,5 +214,9 @@ class TaskViewModel @Inject constructor(
             parentTaskId = parentTaskId
         )
         taskRepository.insertTask(task)
+    }
+
+    suspend fun getSubtasks(parentId: Long): List<Task> {
+        return taskRepository.getSubTasksList(parentId)
     }
 }
