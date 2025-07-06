@@ -10,6 +10,7 @@ import com.taskmaster.R
 import com.taskmaster.data.entity.Task
 import com.taskmaster.databinding.ItemTaskBinding
 import com.taskmaster.utils.PriorityUtils
+import java.util.Date
 
 class TaskAdapter(
     private val onTaskClick: (Task) -> Unit,
@@ -49,10 +50,18 @@ class TaskAdapter(
                 priorityIndicator.setBackgroundColor(colorInt)
 
                 // Set click listeners
-                root.setOnClickListener { onTaskClick(task) }
+                root.setOnLongClickListener { onTaskClick(task); true }
                 buttonComplete.setOnClickListener { onCompleteClick(task) }
                 buttonPostpone.setOnClickListener { onPostponeClick(task) }
                 buttonDelete.setOnClickListener { onDeleteClick(task) }
+
+                if (task.isCompleted) {
+                    root.strokeColor = ContextCompat.getColor(root.context, R.color.success)
+                } else if (task.dueDate != null && task.dueDate.before(Date())) {
+                    root.strokeColor = ContextCompat.getColor(root.context, R.color.warning)
+                } else {
+                    root.strokeColor = ContextCompat.getColor(root.context, android.R.color.transparent)
+                }
             }
         }
     }
