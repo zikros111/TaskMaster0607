@@ -40,7 +40,9 @@ class CreateTaskDialogFragment : DialogFragment() {
     private var editingTask: Task? = null
     private var isEditMode: Boolean = false
 
+
     private val subtaskFields = mutableListOf<TextInputEditText>()
+
 
 
 
@@ -276,6 +278,7 @@ class CreateTaskDialogFragment : DialogFragment() {
 
                         val subtasksText = binding.editTextSubtasks.text.toString().trim()
                         createComplexTask(title, description, priority, sphereId, subtasksText)
+
 
                     } else {
                         taskViewModel.createTask(

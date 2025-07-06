@@ -93,7 +93,6 @@ class StatisticsFragment : Fragment() {
             levelText.text = "Уровень $level"
             binding.containerSpheres.addView(item)
 
-
         }
     }
 
