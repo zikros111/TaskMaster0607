@@ -1,9 +1,12 @@
 package com.taskmaster.data.entity
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 import java.util.Date
 
+@Parcelize
 @Entity(tableName = "tasks")
 data class Task(
     @PrimaryKey(autoGenerate = true)
@@ -18,4 +21,4 @@ data class Task(
     val completedAt: Date? = null,
     val xpReward: Int = 0,
     val parentTaskId: Long? = null
-)
+) : Parcelable

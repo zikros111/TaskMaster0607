@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.taskmaster.databinding.FragmentCalendarBinding
 import com.taskmaster.ui.adapter.CalendarAdapter
 import com.taskmaster.ui.viewmodel.TaskViewModel
+import com.taskmaster.ui.dialogs.DateTasksDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.*
@@ -68,27 +69,27 @@ class CalendarFragment : Fragment() {
         val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
         val firstDayOfWeek = calendar.get(Calendar.DAY_OF_WEEK) - 1
 
-        val days = mutableListOf<CalendarDay>()
+        lifecycleScope.launch {
+            val days = mutableListOf<CalendarDay>()
 
-        // Add empty days for the first week
-        for (i in 0 until firstDayOfWeek) {
-            days.add(CalendarDay.EmptyDay)
+            for (i in 0 until firstDayOfWeek) {
+                days.add(CalendarDay.EmptyDay)
+            }
+
+            for (day in 1..daysInMonth) {
+                calendar.set(Calendar.DAY_OF_MONTH, day)
+                val date = Date(calendar.timeInMillis)
+                val progress = taskViewModel.getDayProgress(date)
+                days.add(CalendarDay.DateDay(date, progress))
+            }
+
+            calendarAdapter.submitList(days)
         }
-
-        // Add days of the month
-        for (day in 1..daysInMonth) {
-            calendar.set(Calendar.DAY_OF_MONTH, day)
-            days.add(CalendarDay.DateDay(Date(calendar.timeInMillis)))
-        }
-
-        calendarAdapter.submitList(days)
     }
 
     private fun showTasksForDate(date: Date) {
-        lifecycleScope.launch {
-            val progress = taskViewModel.getDayProgress(date)
-            // Update UI with progress for selected date
-        }
+        val dialog = DateTasksDialogFragment.newInstance(date)
+        dialog.show(parentFragmentManager, "tasksForDate")
     }
 
     override fun onDestroyView() {
