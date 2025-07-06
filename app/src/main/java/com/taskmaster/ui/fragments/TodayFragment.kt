@@ -8,10 +8,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.snackbar.Snackbar
 import com.taskmaster.databinding.FragmentTodayBinding
 import com.taskmaster.ui.adapter.TaskAdapter
 import com.taskmaster.ui.dialogs.CreateTaskDialogFragment
+import com.taskmaster.ui.adapter.TaskWithSubtasks
 import com.taskmaster.ui.viewmodel.ProfileViewModel
 import com.taskmaster.ui.viewmodel.TaskViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -44,7 +46,9 @@ class TodayFragment : Fragment() {
 
     private fun setupRecyclerView() {
         taskAdapter = TaskAdapter(
-            onTaskClick = { _ -> /* Handle task click */ },
+            onTaskClick = { task ->
+                showEditTaskDialog(task)
+            },
             onCompleteClick = { task ->
                 taskViewModel.completeTask(task)
                 showCompletionFeedback(task)
@@ -65,9 +69,16 @@ class TodayFragment : Fragment() {
 
     private fun setupObservers() {
         taskViewModel.todayTasks.observe(viewLifecycleOwner) { tasks ->
-            taskAdapter.submitList(tasks)
-            binding.emptyState.visibility = if (tasks.isEmpty()) View.VISIBLE else View.GONE
-            updateTasksInfo(tasks)
+            viewLifecycleOwner.lifecycleScope.launch {
+                val parents = tasks.filter { it.parentTaskId == null }
+                val list = parents.map { parent ->
+                    val subs = taskViewModel.getSubtasks(parent.id)
+                    TaskWithSubtasks(parent, subs)
+                }
+                taskAdapter.submitList(list)
+                binding.emptyState.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+                updateTasksInfo(list.map { it.task })
+            }
         }
 
         taskViewModel.todayProgress.observe(viewLifecycleOwner) { progress ->
@@ -100,12 +111,12 @@ class TodayFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.fabAddTask.setOnClickListener {
-            showCreateTaskDialog()
+            showCreateTaskDialog(null)
         }
     }
 
-    private fun showCreateTaskDialog() {
-        val dialog = CreateTaskDialogFragment.newInstance()
+    private fun showCreateTaskDialog(task: com.taskmaster.data.entity.Task?) {
+        val dialog = CreateTaskDialogFragment.newInstance(task)
         dialog.show(parentFragmentManager, "CreateTaskDialog")
     }
 
@@ -125,12 +136,22 @@ class TodayFragment : Fragment() {
             .show()
     }
 
+    private fun showEditTaskDialog(task: com.taskmaster.data.entity.Task) {
+        showCreateTaskDialog(task)
+    }
+
     private fun showDeleteConfirmation(task: com.taskmaster.data.entity.Task) {
         AlertDialog.Builder(requireContext())
             .setTitle("Удалить задачу?")
-            .setMessage("Это действие нельзя отменить")
+            .setMessage("Это действие можно отменить в течение 15 секунд")
             .setPositiveButton("Удалить") { _, _ ->
                 taskViewModel.deleteTask(task)
+                Snackbar.make(binding.root, "Задача удалена", Snackbar.LENGTH_LONG)
+                    .setAction("Отмена") {
+                        taskViewModel.restoreTask(task)
+                    }
+                    .setDuration(15000)
+                    .show()
             }
             .setNegativeButton("Отмена", null)
             .show()
