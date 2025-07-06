@@ -39,9 +39,9 @@ class DateTasksDialogFragment : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         adapter = TaskAdapter(
             onTaskClick = { task -> },
-            onCompleteClick = { taskViewModel.completeTask(task) },
-            onPostponeClick = { taskViewModel.postponeTask(task) },
-            onDeleteClick = { taskViewModel.deleteTask(task) }
+            onCompleteClick = { task -> taskViewModel.completeTask(task) },
+            onPostponeClick = { task -> taskViewModel.postponeTask(task) },
+            onDeleteClick = { task -> taskViewModel.deleteTask(task) }
         )
         binding.recyclerView.apply {
             adapter = this@DateTasksDialogFragment.adapter

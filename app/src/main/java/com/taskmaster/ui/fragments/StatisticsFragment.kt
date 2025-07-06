@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.taskmaster.R
 import com.taskmaster.databinding.FragmentStatisticsBinding
 import com.taskmaster.ui.viewmodel.TaskViewModel
 import com.taskmaster.ui.viewmodel.SphereViewModel
