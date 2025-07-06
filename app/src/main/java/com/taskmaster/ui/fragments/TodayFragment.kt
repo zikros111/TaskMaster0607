@@ -44,7 +44,9 @@ class TodayFragment : Fragment() {
 
     private fun setupRecyclerView() {
         taskAdapter = TaskAdapter(
-            onTaskClick = { _ -> /* Handle task click */ },
+            onTaskClick = { task ->
+                showEditTaskDialog(task)
+            },
             onCompleteClick = { task ->
                 taskViewModel.completeTask(task)
                 showCompletionFeedback(task)
@@ -100,12 +102,12 @@ class TodayFragment : Fragment() {
 
     private fun setupClickListeners() {
         binding.fabAddTask.setOnClickListener {
-            showCreateTaskDialog()
+            showCreateTaskDialog(null)
         }
     }
 
-    private fun showCreateTaskDialog() {
-        val dialog = CreateTaskDialogFragment.newInstance()
+    private fun showCreateTaskDialog(task: com.taskmaster.data.entity.Task?) {
+        val dialog = CreateTaskDialogFragment.newInstance(task)
         dialog.show(parentFragmentManager, "CreateTaskDialog")
     }
 
@@ -125,12 +127,22 @@ class TodayFragment : Fragment() {
             .show()
     }
 
+    private fun showEditTaskDialog(task: com.taskmaster.data.entity.Task) {
+        showCreateTaskDialog(task)
+    }
+
     private fun showDeleteConfirmation(task: com.taskmaster.data.entity.Task) {
         AlertDialog.Builder(requireContext())
             .setTitle("Удалить задачу?")
-            .setMessage("Это действие нельзя отменить")
+            .setMessage("Это действие можно отменить в течение 15 секунд")
             .setPositiveButton("Удалить") { _, _ ->
                 taskViewModel.deleteTask(task)
+                Snackbar.make(binding.root, "Задача удалена", Snackbar.LENGTH_LONG)
+                    .setAction("Отмена") {
+                        taskViewModel.restoreTask(task)
+                    }
+                    .setDuration(15000)
+                    .show()
             }
             .setNegativeButton("Отмена", null)
             .show()

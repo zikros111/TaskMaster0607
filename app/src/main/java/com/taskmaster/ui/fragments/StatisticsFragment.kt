@@ -9,6 +9,8 @@ import androidx.fragment.app.viewModels
 import com.taskmaster.databinding.FragmentStatisticsBinding
 import com.taskmaster.ui.viewmodel.TaskViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import java.util.Calendar
+import java.util.Date
 
 @AndroidEntryPoint
 class StatisticsFragment : Fragment() {
@@ -43,10 +45,20 @@ class StatisticsFragment : Fragment() {
         val totalTasks = tasks.size
         val completionRate = if (totalTasks > 0) (completedTasks * 100) / totalTasks else 0
 
+        val calendar = Calendar.getInstance()
+        val end = calendar.time
+        calendar.add(Calendar.DAY_OF_YEAR, -7)
+        val start = calendar.time
+        val tasksLastWeek = tasks.filter { task ->
+            task.dueDate?.let { it.after(start) && it.before(end) } == true
+        }
+        val avg = if (tasksLastWeek.isNotEmpty()) tasksLastWeek.size / 7f else 0f
+
         binding.apply {
             textCompletedTasks.text = completedTasks.toString()
             textTotalTasks.text = totalTasks.toString()
             textCompletionRate.text = "$completionRate%"
+            textAverageTasks.text = String.format("%.1f", avg)
         }
     }
 
