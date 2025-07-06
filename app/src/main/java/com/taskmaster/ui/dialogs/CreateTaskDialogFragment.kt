@@ -39,7 +39,12 @@ class CreateTaskDialogFragment : DialogFragment() {
     private var selectedSphere: Sphere? = null
     private var editingTask: Task? = null
     private var isEditMode: Boolean = false
+
+
     private val subtaskFields = mutableListOf<TextInputEditText>()
+
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -267,8 +272,14 @@ class CreateTaskDialogFragment : DialogFragment() {
                     }
                 } else {
                     if (isComplexTask) {
+
                         val subtasks = subtaskFields.map { it.text.toString().trim() }.filter { it.isNotEmpty() }
                         createComplexTask(title, description, priority, sphereId, subtasks)
+
+                        val subtasksText = binding.editTextSubtasks.text.toString().trim()
+                        createComplexTask(title, description, priority, sphereId, subtasksText)
+
+
                     } else {
                         taskViewModel.createTask(
                             title = title,

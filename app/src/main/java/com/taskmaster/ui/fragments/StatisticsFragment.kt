@@ -67,6 +67,7 @@ class StatisticsFragment : Fragment() {
             textTotalTasks.text = totalTasks.toString()
             textCompletionRate.text = "$completionRate%"
             textAverageTasks.text = String.format("%.1f", avg)
+
         }
     }
 
@@ -91,6 +92,7 @@ class StatisticsFragment : Fragment() {
             progress.progress = xpForLevel
             levelText.text = "Уровень $level"
             binding.containerSpheres.addView(item)
+
         }
     }
 
