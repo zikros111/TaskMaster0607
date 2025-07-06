@@ -273,11 +273,10 @@ class CreateTaskDialogFragment : DialogFragment() {
                 } else {
                     if (isComplexTask) {
 
-                        val subtasks = subtaskFields.map { it.text.toString().trim() }.filter { it.isNotEmpty() }
+                        val subtasks = subtaskFields
+                            .map { it.text.toString().trim() }
+                            .filter { it.isNotEmpty() }
                         createComplexTask(title, description, priority, sphereId, subtasks)
-
-                        val subtasksText = binding.editTextSubtasks.text.toString().trim()
-                        createComplexTask(title, description, priority, sphereId, subtasksText)
 
 
                     } else {

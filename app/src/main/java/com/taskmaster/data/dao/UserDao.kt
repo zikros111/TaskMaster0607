@@ -9,6 +9,9 @@ interface UserDao {
     @Query("SELECT * FROM users WHERE isCurrentUser = 1 LIMIT 1")
     fun getCurrentUser(): LiveData<User>
 
+    @Query("SELECT * FROM users WHERE isCurrentUser = 1 LIMIT 1")
+    suspend fun getCurrentUserSync(): User?
+
     @Query("SELECT * FROM users WHERE username = :username LIMIT 1")
     suspend fun getUserByUsername(username: String): User?
 
