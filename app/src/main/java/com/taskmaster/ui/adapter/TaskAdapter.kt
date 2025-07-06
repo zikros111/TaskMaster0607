@@ -59,7 +59,7 @@ class TaskAdapter(
                 priorityIndicator.setBackgroundColor(colorInt)
 
                 // Set click listeners
-                root.setOnLongClickListener { onTaskClick(task); true }
+                root.setOnClickListener { onTaskClick(task) }
                 buttonComplete.setOnClickListener { onCompleteClick(task) }
                 buttonPostpone.setOnClickListener { onPostponeClick(task) }
                 buttonDelete.setOnClickListener { onDeleteClick(task) }

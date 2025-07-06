@@ -11,6 +11,8 @@ class UserRepository @Inject constructor(
     private val userDao: UserDao
 ) {
     fun getCurrentUser(): LiveData<User> = userDao.getCurrentUser()
+
+    suspend fun getCurrentUserSync(): User? = userDao.getCurrentUserSync()
     
     suspend fun getUserByUsername(username: String): User? = userDao.getUserByUsername(username)
     

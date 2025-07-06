@@ -50,6 +50,10 @@ class TaskViewModel @Inject constructor(
         _selectedDate.value = date
     }
 
+    fun clearSelectedDate() {
+        _selectedDate.value = null
+    }
+
     fun createTask(
         title: String,
         description: String = "",
