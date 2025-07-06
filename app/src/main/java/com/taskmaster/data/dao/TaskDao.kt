@@ -10,14 +10,17 @@ interface TaskDao {
     @Query("SELECT * FROM tasks WHERE parentTaskId IS NULL ORDER BY createdAt DESC")
     fun getAllTasks(): LiveData<List<Task>>
 
-    @Query("SELECT * FROM tasks WHERE DATE(dueDate/1000, 'unixepoch') = DATE('now') AND isCompleted = 0")
+    @Query("SELECT * FROM tasks WHERE DATE(dueDate/1000, 'unixepoch') = DATE('now') AND parentTaskId IS NULL ORDER BY isCompleted ASC, createdAt DESC")
     fun getTodayTasks(): LiveData<List<Task>>
 
-    @Query("SELECT * FROM tasks WHERE DATE(dueDate/1000, 'unixepoch') = DATE(:date/1000, 'unixepoch')")
+    @Query("SELECT * FROM tasks WHERE DATE(dueDate/1000, 'unixepoch') = DATE(:date/1000, 'unixepoch') AND parentTaskId IS NULL ORDER BY isCompleted ASC, createdAt DESC")
     fun getTasksByDate(date: Date): LiveData<List<Task>>
 
     @Query("SELECT * FROM tasks WHERE parentTaskId = :parentId")
     fun getSubTasks(parentId: Long): LiveData<List<Task>>
+
+    @Query("SELECT * FROM tasks WHERE parentTaskId = :parentId")
+    suspend fun getSubTasksList(parentId: Long): List<Task>
 
     @Query("SELECT * FROM tasks WHERE sphereId = :sphereId")
     fun getTasksBySphere(sphereId: Long): LiveData<List<Task>>

@@ -10,9 +10,12 @@ import android.widget.ArrayAdapter
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.core.widget.addTextChangedListener
+import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.snackbar.Snackbar
 import com.taskmaster.R
 import com.taskmaster.data.entity.Sphere
+import com.taskmaster.data.entity.Task
 import com.taskmaster.databinding.DialogCreateTaskBinding
 import com.taskmaster.ui.viewmodel.SphereViewModel
 import com.taskmaster.ui.viewmodel.TaskViewModel
@@ -34,6 +37,20 @@ class CreateTaskDialogFragment : DialogFragment() {
     private var selectedTime: Date? = null
     private var spheres = listOf<Sphere>()
     private var selectedSphere: Sphere? = null
+    private var editingTask: Task? = null
+    private var isEditMode: Boolean = false
+    private val subtaskFields = mutableListOf<TextInputEditText>()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        arguments?.let { bundle ->
+            editingTask = bundle.getParcelable(ARG_TASK)
+            isEditMode = editingTask != null
+            editingTask?.let { task ->
+                selectedDate = task.dueDate ?: Date()
+            }
+        }
+    }
 
     private val dateFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
     private val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -108,6 +125,9 @@ class CreateTaskDialogFragment : DialogFragment() {
         binding.spinnerTaskType.setOnItemSelectedListener(object : android.widget.AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: android.widget.AdapterView<*>?, view: View?, position: Int, id: Long) {
                 binding.layoutSubtasks.visibility = if (position == 1) View.VISIBLE else View.GONE
+                if (position == 1 && subtaskFields.isEmpty()) {
+                    addSubtaskField()
+                }
             }
             override fun onNothingSelected(parent: android.widget.AdapterView<*>?) {}
         })
@@ -130,9 +150,13 @@ class CreateTaskDialogFragment : DialogFragment() {
     }
 
     private fun setupObservers() {
-        sphereViewModel.allSpheres.observe(this) { sphereList ->
+        sphereViewModel.allSpheres.observe(viewLifecycleOwner) { sphereList ->
             spheres = sphereList
+            if (spheres.isEmpty()) {
+                sphereViewModel.insertDefaultSpheres()
+            }
             setupSphereSpinner()
+            populateEditingTask()
         }
     }
 
@@ -160,11 +184,25 @@ class CreateTaskDialogFragment : DialogFragment() {
 
     private fun setupClickListeners() {
         binding.buttonCreate.setOnClickListener {
-            createTask()
+            saveTask()
         }
 
         binding.buttonCancel.setOnClickListener {
             dismiss()
+        }
+    }
+
+    private fun populateEditingTask() {
+        if (!isEditMode) return
+        editingTask?.let { task ->
+            binding.editTextTitle.setText(task.title)
+            binding.editTextDescription.setText(task.description)
+            binding.spinnerPriority.setSelection(task.priority - 1)
+            binding.buttonSelectDate.text = dateFormat.format(task.dueDate ?: Date())
+            selectedSphere = spheres.find { it.id == task.sphereId }
+            val index = spheres.indexOfFirst { it.id == task.sphereId }
+            if (index >= 0) binding.spinnerSphere.setSelection(index)
+            binding.buttonCreate.text = "Сохранить"
         }
     }
 
@@ -202,7 +240,7 @@ class CreateTaskDialogFragment : DialogFragment() {
         ).show()
     }
 
-    private fun createTask() {
+    private fun saveTask() {
         val title = binding.editTextTitle.text.toString().trim()
         val description = binding.editTextDescription.text.toString().trim()
         val priority = binding.spinnerPriority.selectedItemPosition + 1
@@ -216,26 +254,35 @@ class CreateTaskDialogFragment : DialogFragment() {
 
         lifecycleScope.launch {
             try {
-                if (isComplexTask) {
-                    // Создаем сложную задачу с подзадачами
-                    val subtasksText = binding.editTextSubtasks.text.toString().trim()
-                    createComplexTask(title, description, priority, sphereId, subtasksText)
+                if (isEditMode) {
+                    editingTask?.let { task ->
+                        val updated = task.copy(
+                            title = title,
+                            description = description,
+                            priority = priority,
+                            sphereId = sphereId,
+                            dueDate = selectedDate
+                        )
+                        taskViewModel.updateTask(updated)
+                    }
                 } else {
-                    // Создаем простую задачу
-                    taskViewModel.createTask(
-                        title = title,
-                        description = description,
-                        priority = priority,
-                        sphereId = sphereId,
-                        dueDate = selectedDate
-                    )
+                    if (isComplexTask) {
+                        val subtasks = subtaskFields.map { it.text.toString().trim() }.filter { it.isNotEmpty() }
+                        createComplexTask(title, description, priority, sphereId, subtasks)
+                    } else {
+                        taskViewModel.createTask(
+                            title = title,
+                            description = description,
+                            priority = priority,
+                            sphereId = sphereId,
+                            dueDate = selectedDate
+                        )
+                    }
                 }
-
-                Snackbar.make(binding.root, "Задача создана!", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, if (isEditMode) "Задача обновлена!" else "Задача создана!", Snackbar.LENGTH_SHORT).show()
                 dismiss()
-
             } catch (e: Exception) {
-                Snackbar.make(binding.root, "Ошибка создания задачи", Snackbar.LENGTH_SHORT).show()
+                Snackbar.make(binding.root, "Ошибка сохранения задачи", Snackbar.LENGTH_SHORT).show()
             }
         }
     }
@@ -245,7 +292,7 @@ class CreateTaskDialogFragment : DialogFragment() {
         description: String,
         priority: Int,
         sphereId: Long,
-        subtasksText: String
+        subtasks: List<String>
     ) {
         // Создаем главную задачу
         val mainTaskId = taskViewModel.createTaskAndGetId(
@@ -257,8 +304,7 @@ class CreateTaskDialogFragment : DialogFragment() {
         )
 
 // Создаем подзадачи
-        if (subtasksText.isNotEmpty()) {
-            val subtasks = subtasksText.split("\n").filter { it.trim().isNotEmpty() }
+        if (subtasks.isNotEmpty()) {
             subtasks.forEach { subtaskTitle ->
                 taskViewModel.createSubtask(
                     title = subtaskTitle.trim(),
@@ -271,12 +317,31 @@ class CreateTaskDialogFragment : DialogFragment() {
         }
     }
 
+    private fun addSubtaskField(text: String = "") {
+        val field = TextInputEditText(requireContext())
+        field.setText(text)
+        field.hint = "Подзадача"
+        binding.layoutSubtasks.addView(field)
+        subtaskFields.add(field)
+        field.addTextChangedListener {
+            if (field == subtaskFields.last() && it?.isNotEmpty() == true) {
+                addSubtaskField()
+            }
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 
     companion object {
-        fun newInstance() = CreateTaskDialogFragment()
+        private const val ARG_TASK = "arg_task"
+
+        fun newInstance(task: Task? = null) = CreateTaskDialogFragment().apply {
+            task?.let {
+                arguments = Bundle().apply { putParcelable(ARG_TASK, it) }
+            }
+        }
     }
 }

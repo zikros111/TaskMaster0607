@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.taskmaster.databinding.FragmentProfileBinding
+import com.taskmaster.ui.dialogs.EditProfileDialogFragment
 import com.taskmaster.ui.viewmodel.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -30,6 +31,7 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupObservers()
+        binding.buttonEditProfile.setOnClickListener { showEditDialog() }
     }
 
     private fun setupObservers() {
@@ -47,6 +49,11 @@ class ProfileFragment : Fragment() {
             textXp.text = "${user.totalXp} XP"
             textStreak.text = "${user.currentStreak} дней"
         }
+    }
+
+    private fun showEditDialog() {
+        val dialog = EditProfileDialogFragment.newInstance()
+        dialog.show(parentFragmentManager, "EditProfileDialog")
     }
 
     override fun onDestroyView() {
