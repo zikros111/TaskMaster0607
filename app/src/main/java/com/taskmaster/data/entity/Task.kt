@@ -15,6 +15,8 @@ data class Task(
     val description: String = "",
     val priority: Int = 5,
     val sphereId: Long = 1,
+    val complexity: Int = 1,
+    val orderIndex: Int = 0,
     val isCompleted: Boolean = false,
     val createdAt: Date = Date(),
     val dueDate: Date? = null,

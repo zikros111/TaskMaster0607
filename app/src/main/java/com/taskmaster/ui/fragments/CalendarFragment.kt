@@ -12,7 +12,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.taskmaster.databinding.FragmentCalendarBinding
 import com.taskmaster.ui.adapter.CalendarAdapter
 import com.taskmaster.ui.viewmodel.TaskViewModel
-import com.taskmaster.ui.dialogs.DateTasksDialogFragment
+import androidx.navigation.fragment.findNavController
+import com.taskmaster.R
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.*
@@ -89,8 +90,8 @@ class CalendarFragment : Fragment() {
     }
 
     private fun showTasksForDate(date: Date) {
-        val dialog = DateTasksDialogFragment.newInstance(date)
-        dialog.show(parentFragmentManager, "tasksForDate")
+        val bundle = Bundle().apply { putSerializable("date", date) }
+        findNavController().navigate(R.id.dateTasksFragment, bundle)
     }
 
     override fun onDestroyView() {

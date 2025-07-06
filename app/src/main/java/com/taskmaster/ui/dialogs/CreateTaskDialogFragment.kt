@@ -285,7 +285,9 @@ class CreateTaskDialogFragment : DialogFragment() {
                             description = description,
                             priority = priority,
                             sphereId = sphereId,
-                            dueDate = selectedDate
+                            dueDate = selectedDate,
+                            complexity = priority,
+                            orderIndex = 0
                         )
                     }
                 }
@@ -310,7 +312,9 @@ class CreateTaskDialogFragment : DialogFragment() {
             description = description,
             priority = priority,
             sphereId = sphereId,
-            dueDate = selectedDate
+            dueDate = selectedDate,
+            complexity = priority,
+            orderIndex = 0
         )
 
 // Создаем подзадачи
@@ -321,7 +325,9 @@ class CreateTaskDialogFragment : DialogFragment() {
                     parentTaskId = mainTaskId,
                     priority = priority,
                     sphereId = sphereId,
-                    dueDate = selectedDate
+                    dueDate = selectedDate,
+                    complexity = priority,
+                    orderIndex = 0
                 )
             }
         }

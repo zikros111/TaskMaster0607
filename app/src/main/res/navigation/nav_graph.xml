@@ -29,4 +29,22 @@
         android:label="@string/profile"
         tools:layout="@layout/fragment_profile" />
 
+    <fragment
+        android:id="@+id/dateTasksFragment"
+        android:name="com.taskmaster.ui.fragments.DateTasksFragment"
+        tools:layout="@layout/fragment_date_tasks" >
+        <argument
+            android:name="date"
+            app:argType="java.util.Date" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/taskDetailFragment"
+        android:name="com.taskmaster.ui.fragments.TaskDetailFragment"
+        tools:layout="@layout/fragment_task_detail" >
+        <argument
+            android:name="task"
+            app:argType="com.taskmaster.data.entity.Task" />
+    </fragment>
+
 </navigation>

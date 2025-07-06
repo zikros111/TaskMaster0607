@@ -59,7 +59,9 @@ class TaskViewModel @Inject constructor(
         description: String = "",
         priority: Int = 5,
         sphereId: Long = 1,
-        dueDate: Date = Date()
+        dueDate: Date = Date(),
+        complexity: Int = 1,
+        orderIndex: Int = 0
     ) {
         viewModelScope.launch {
             try {
@@ -70,6 +72,8 @@ class TaskViewModel @Inject constructor(
                     description = description,
                     priority = priority,
                     sphereId = sphereId,
+                    complexity = complexity,
+                    orderIndex = orderIndex,
                     dueDate = dueDate,
                     xpReward = xp
                 )
@@ -179,12 +183,18 @@ class TaskViewModel @Inject constructor(
     fun clearError() {
         _errorMessage.value = null
     }
+
+    fun refreshTodayData() {
+        loadTodayData()
+    }
     suspend fun createTaskAndGetId(
         title: String,
         description: String = "",
         priority: Int = 5,
         sphereId: Long = 1,
-        dueDate: Date = Date()
+        dueDate: Date = Date(),
+        complexity: Int = 1,
+        orderIndex: Int = 0
     ): Long {
         val xp = XpCalculator.calculateXp(priority)
         val task = Task(
@@ -192,6 +202,8 @@ class TaskViewModel @Inject constructor(
             description = description,
             priority = priority,
             sphereId = sphereId,
+            complexity = complexity,
+            orderIndex = orderIndex,
             dueDate = dueDate,
             xpReward = xp
         )
@@ -205,7 +217,9 @@ class TaskViewModel @Inject constructor(
         description: String = "",
         priority: Int = 5,
         sphereId: Long = 1,
-        dueDate: Date = Date()
+        dueDate: Date = Date(),
+        complexity: Int = 1,
+        orderIndex: Int = 0
     ) {
         val xp = XpCalculator.calculateXp(priority)
         val task = Task(
@@ -213,6 +227,8 @@ class TaskViewModel @Inject constructor(
             description = description,
             priority = priority,
             sphereId = sphereId,
+            complexity = complexity,
+            orderIndex = orderIndex,
             dueDate = dueDate,
             xpReward = xp,
             parentTaskId = parentTaskId
