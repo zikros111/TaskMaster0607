@@ -16,6 +16,19 @@ class ProfileViewModel @Inject constructor(
 ) : ViewModel() {
 
     val currentUser = userRepository.getCurrentUser()
+
+    init {
+        viewModelScope.launch {
+            if (userRepository.getCurrentUserSync() == null) {
+                val defaultUser = User(
+                    username = "taskmaster_user",
+                    name = "Игрок TaskMaster",
+                    isCurrentUser = true
+                )
+                userRepository.insertUser(defaultUser)
+            }
+        }
+    }
     
     private val _searchResults = MutableLiveData<List<User>>()
     val searchResults: LiveData<List<User>> = _searchResults

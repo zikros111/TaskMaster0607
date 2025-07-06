@@ -18,7 +18,7 @@ import com.taskmaster.utils.DateConverter
         Friend::class,
         Reminder::class
     ],
-    version = 2, // УВЕЛИЧЕНА ВЕРСИЯ
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(DateConverter::class)

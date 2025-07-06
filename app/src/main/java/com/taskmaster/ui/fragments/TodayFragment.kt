@@ -8,7 +8,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import com.taskmaster.R
+import kotlinx.coroutines.launch
 import com.google.android.material.snackbar.Snackbar
 import com.taskmaster.databinding.FragmentTodayBinding
 import com.taskmaster.ui.adapter.TaskAdapter
@@ -44,10 +49,16 @@ class TodayFragment : Fragment() {
         setupClickListeners()
     }
 
+    override fun onResume() {
+        super.onResume()
+        taskViewModel.refreshTodayData()
+    }
+
     private fun setupRecyclerView() {
         taskAdapter = TaskAdapter(
             onTaskClick = { task ->
-                showEditTaskDialog(task)
+                val bundle = Bundle().apply { putParcelable("task", task) }
+                findNavController().navigate(R.id.taskDetailFragment, bundle)
             },
             onCompleteClick = { task ->
                 taskViewModel.completeTask(task)
@@ -64,6 +75,25 @@ class TodayFragment : Fragment() {
         binding.recyclerViewTasks.apply {
             adapter = taskAdapter
             layoutManager = LinearLayoutManager(context)
+            val callback = object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+                override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                    val from = vh.adapterPosition
+                    val to = target.adapterPosition
+                    val list = taskAdapter.currentList.toMutableList()
+                    java.util.Collections.swap(list, from, to)
+                    taskAdapter.submitList(list)
+                    return true
+                }
+                override fun onSwiped(vh: RecyclerView.ViewHolder, dir: Int) {}
+                override fun clearView(rv: RecyclerView, vh: RecyclerView.ViewHolder) {
+                    super.clearView(rv, vh)
+                    val updated = taskAdapter.currentList.mapIndexed { index, item ->
+                        item.task.copy(orderIndex = index)
+                    }
+                    updated.forEach { taskViewModel.updateTask(it) }
+                }
+            }
+            ItemTouchHelper(callback).attachToRecyclerView(this)
         }
     }
 

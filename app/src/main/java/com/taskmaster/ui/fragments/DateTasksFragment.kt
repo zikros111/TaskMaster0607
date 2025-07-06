@@ -1,52 +1,56 @@
-package com.taskmaster.ui.dialogs
+package com.taskmaster.ui.fragments
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.DialogFragment
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.taskmaster.databinding.DialogTasksByDateBinding
+import com.taskmaster.R
+import com.taskmaster.databinding.FragmentDateTasksBinding
 import com.taskmaster.ui.adapter.TaskAdapter
 import com.taskmaster.ui.adapter.TaskWithSubtasks
 import com.taskmaster.ui.viewmodel.TaskViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import java.util.Date
 
 @AndroidEntryPoint
-class DateTasksDialogFragment : DialogFragment() {
-    private var _binding: DialogTasksByDateBinding? = null
+class DateTasksFragment : Fragment() {
+
+    private var _binding: FragmentDateTasksBinding? = null
     private val binding get() = _binding!!
 
-    private val taskViewModel: TaskViewModel by activityViewModels()
+    private val taskViewModel: TaskViewModel by viewModels()
     private lateinit var adapter: TaskAdapter
-    private var date: Date = Date()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        date = arguments?.getSerializable(ARG_DATE) as? Date ?: Date()
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        _binding = DialogTasksByDateBinding.inflate(inflater, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentDateTasksBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         adapter = TaskAdapter(
-            onTaskClick = { task -> },
+            onTaskClick = { task ->
+                val bundle = Bundle().apply { putParcelable("task", task) }
+                findNavController().navigate(R.id.taskDetailFragment, bundle)
+            },
             onCompleteClick = { task -> taskViewModel.completeTask(task) },
             onPostponeClick = { task -> taskViewModel.postponeTask(task) },
             onDeleteClick = { task -> taskViewModel.deleteTask(task) }
         )
         binding.recyclerView.apply {
-            adapter = this@DateTasksDialogFragment.adapter
+            adapter = this@DateTasksFragment.adapter
             layoutManager = LinearLayoutManager(context)
         }
+        val date = requireArguments().getSerializable("date") as? java.util.Date ?: return
         taskViewModel.getTasksByDate(date).observe(viewLifecycleOwner) { tasks ->
             viewLifecycleOwner.lifecycleScope.launch {
                 val list = tasks.map { parent ->
@@ -56,17 +60,11 @@ class DateTasksDialogFragment : DialogFragment() {
                 adapter.submitList(list)
             }
         }
+        binding.buttonBack.setOnClickListener { findNavController().popBackStack() }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    companion object {
-        private const val ARG_DATE = "arg_date"
-        fun newInstance(date: Date) = DateTasksDialogFragment().apply {
-            arguments = Bundle().apply { putSerializable(ARG_DATE, date) }
-        }
     }
 }

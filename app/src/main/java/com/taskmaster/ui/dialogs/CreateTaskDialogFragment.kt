@@ -273,11 +273,10 @@ class CreateTaskDialogFragment : DialogFragment() {
                 } else {
                     if (isComplexTask) {
 
-                        val subtasks = subtaskFields.map { it.text.toString().trim() }.filter { it.isNotEmpty() }
+                        val subtasks = subtaskFields
+                            .map { it.text.toString().trim() }
+                            .filter { it.isNotEmpty() }
                         createComplexTask(title, description, priority, sphereId, subtasks)
-
-                        val subtasksText = binding.editTextSubtasks.text.toString().trim()
-                        createComplexTask(title, description, priority, sphereId, subtasksText)
 
 
                     } else {
@@ -286,7 +285,9 @@ class CreateTaskDialogFragment : DialogFragment() {
                             description = description,
                             priority = priority,
                             sphereId = sphereId,
-                            dueDate = selectedDate
+                            dueDate = selectedDate,
+                            complexity = priority,
+                            orderIndex = 0
                         )
                     }
                 }
@@ -311,7 +312,9 @@ class CreateTaskDialogFragment : DialogFragment() {
             description = description,
             priority = priority,
             sphereId = sphereId,
-            dueDate = selectedDate
+            dueDate = selectedDate,
+            complexity = priority,
+            orderIndex = 0
         )
 
 // Создаем подзадачи
@@ -322,7 +325,9 @@ class CreateTaskDialogFragment : DialogFragment() {
                     parentTaskId = mainTaskId,
                     priority = priority,
                     sphereId = sphereId,
-                    dueDate = selectedDate
+                    dueDate = selectedDate,
+                    complexity = priority,
+                    orderIndex = 0
                 )
             }
         }
